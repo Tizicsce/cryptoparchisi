@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from 'react'
 
 const COLORS = {
   red: { bg: 'bg-red-500', border: 'border-red-600' },
@@ -11,15 +10,14 @@ const COLORS = {
 const PLAYERS = ['red', 'blue', 'green', 'yellow']
 
 export default function App() {
-  const [gameState, setGameState] = useState('menu') // menu, betting, playing, ended
+  const [gameState, setGameState] = useState('menu')
   const [currentPlayer, setCurrentPlayer] = useState(0)
   const [dice, setDice] = useState(1)
   const [isRolling, setIsRolling] = useState(false)
   const [betAmount, setBetAmount] = useState(0.1)
-  const [wallet, setWallet] = useState(10) // 10 ETH mock
+  const [wallet, setWallet] = useState(10)
   const [pot, setPot] = useState(0)
   
-  // Game board - simplified 52-cell track + 4 home bases
   const [pieces, setPieces] = useState({
     red: [{ pos: -1, home: false }, { pos: -1, home: false }, { pos: -1, home: false }, { pos: -1, home: false }],
     blue: [{ pos: -1, home: false }, { pos: -1, home: false }, { pos: -1, home: false }, { pos: -1, home: false }],
@@ -49,30 +47,25 @@ export default function App() {
     const player = PLAYERS[currentPlayer]
     const playerPieces = pieces[player]
     
-    // Find first piece that can move
     let moved = false
     const newPieces = { ...pieces }
     
     for (let i = 0; i < 4; i++) {
       const piece = playerPieces[i]
       
-      // If piece is at home (-1), need 6 to exit
       if (piece.pos === -1 && roll === 6) {
-        newPieces[player][i].pos = currentPlayer * 13 // Starting position for each player
+        newPieces[player][i].pos = currentPlayer * 13
         moved = true
         break
       }
       
-      // If piece is on board, move it
       if (piece.pos >= 0 && !piece.home) {
         let newPos = piece.pos + roll
         
-        // Check if reached home
         if (newPos >= 52) {
           newPieces[player][i].home = true
           moved = true
           
-          // Check win condition
           const homeCount = newPieces[player].filter(p => p.home).length
           if (homeCount === 4) {
             setGameState('ended')
@@ -91,7 +84,6 @@ export default function App() {
       setPieces(newPieces)
     }
     
-    // Next player (unless rolled 6)
     if (roll !== 6) {
       setCurrentPlayer((currentPlayer + 1) % 4)
     }
@@ -103,7 +95,7 @@ export default function App() {
       return
     }
     setWallet(w => w - betAmount)
-    setPot(betAmount * 4) // 4 players betting
+    setPot(betAmount * 4)
     setGameState('playing')
   }
 
@@ -121,11 +113,7 @@ export default function App() {
   if (gameState === 'menu') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center"
-        >
+        <div className="text-center">
           <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
             CryptoParchisi
           </h1>
@@ -163,7 +151,7 @@ export default function App() {
               Start Game (Win {betAmount * 4} ETH)
             </button>
           </div>
-        </motion.div>
+        </div>
       </div>
     )
   }
@@ -171,11 +159,7 @@ export default function App() {
   if (gameState === 'ended') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center"
-        >
+        <div className="text-center">
           <div className="text-6xl mb-4">🏆</div>
           <h1 className="text-4xl font-bold mb-4">You Won!</h1>          
           <p className="text-2xl text-green-400 mb-2">+{pot.toFixed(2)} ETH</p>
@@ -187,15 +171,13 @@ export default function App() {
           >
             Play Again
           </button>
-        </motion.div>
+        </div>
       </div>
     )
   }
 
-  // Playing state
   return (
     <div className="min-h-screen p-4">
-      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <div>
           <p className="text-sm text-slate-400">Current Turn</p>
@@ -210,9 +192,7 @@ export default function App() {
         </button>
       </div>
 
-      {/* Game Board - Simplified */}
       <div className="max-w-2xl mx-auto">
-        {/* Home Bases */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           {PLAYERS.map((player, i) => (
             <div key={player} className={`p-4 rounded-xl bg-slate-800 border-2 ${currentPlayer === i ? 'border-white' : 'border-transparent'}`}>
@@ -223,31 +203,23 @@ export default function App() {
               </div>
               <div className="flex gap-1">
                 {pieces[player].map((piece, idx) => (
-                  <motion.div
+                  <div
                     key={idx}
                     className={`w-6 h-6 rounded-full ${COLORS[player].bg} border-2 border-white`}
-                    animate={{ 
-                      scale: piece.pos >= 0 ? 1.2 : 1,
-                      opacity: piece.home ? 0.5 : 1
-                    }}
+                    style={{ opacity: piece.home ? 0.5 : 1, transform: piece.pos >= 0 ? 'scale(1.2)' : 'scale(1)' }}
                   >
                     {piece.pos >= 0 && <span className="text-[8px] flex items-center justify-center h-full">{piece.pos}</span>}
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Dice */}
         <div className="flex flex-col items-center gap-4">
-          <motion.div
-            className="dice"
-            animate={{ rotate: isRolling ? 360 : 0 }}
-            transition={{ duration: 0.5 }}
-          >
+          <div className="dice" style={{ transform: isRolling ? 'rotate(360deg)' : 'rotate(0deg)', transition: 'transform 0.5s' }}>
             {dice}
-          </motion.div>
+          </div>
           
           <button
             onClick={rollDice}
@@ -263,7 +235,6 @@ export default function App() {
           </p>
         </div>
 
-        {/* Instructions */}
         <div className="mt-8 p-4 bg-slate-800 rounded-xl">
           <h3 className="font-bold mb-2">How to Play:</h3>
           <ul className="text-sm text-slate-400 space-y-1">
